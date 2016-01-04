@@ -1,0 +1,355 @@
+#!/bin/sh
+
+#remember to install the dependencies
+#sudo aptitude gcc g++ build-essential make automake autoconf texinfo lzip yacc flex libtool \
+#libgmp-dev libffi-dev libunistring-dev libreadline6-dev libreadline6 libgc-dev
+
+COMMIT=$1
+GUILE_AUTOMATIC_BASE_DIR=$PWD
+PREFIX=${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${COMMIT}
+WIN_CFLAGS="-I${PREFIX}/include"
+WIN_CXXFLAGS="-I${PREFIX}/include"
+WIN_LDFLAGS="-L${PREFIX}/lib"
+ZIPDIR=${GUILE_AUTOMATIC_BASE_DIR}/zips
+ZIPNAME=guile-${COMMIT}.zip
+BUILDDIR=${GUILE_AUTOMATIC_BASE_DIR}/builds/guile-${COMMIT}
+DEPSDIR=${GUILE_AUTOMATIC_BASE_DIR}/deps
+GIT_REPO_WORKDIR=${GUILE_AUTOMATIC_BASE_DIR}/guile-git
+GIT_REPO_DIR=${GIR_REPO_WORKDIR}/.git
+
+
+printf "COMMIT: %s\n" ${COMMIT}
+printf "GUILE_AUTOMATIC_BASE_DIR: %s\n" ${GUILE_AUTOMATIC_BASE_DIR}
+printf "PREFIX: %s\n" ${PREFIX}
+printf "WIN_CFLAGS: %s\n" ${WIN_CFLAGS}
+printf "WIN_CXXFLAGS: %s\n" ${WIN_CXXFLAGS}
+printf "WIN_LDFLAGS: %s\n" ${WIN_LDFLAGS}
+printf "ZIPDIR: %s\n" ${ZIPDIR}
+printf "ZIPNAME: %s\n" ${ZIPNAME}
+printf "BUILDDIR: %s\n" ${BUILDDIR}
+
+printf 'Building commit %s..\n' ${COMMIT}
+
+if [ -e guile-git ]; then
+    printf 'guile-git exists\n'
+else
+    printf 'guile-git does not exist\n'
+    printf 'downloading git repo..'
+    git clone git://git.sv.gnu.org/guile.git guile-git
+fi
+
+#clean working directory so we are sure we can pull
+#cd $GUILE_AUTOMATIC_BASE_DIR/guile-git
+#git reset --hard
+#if [ $? -eq 0 ] ; then
+#printf 'Reset git branch with git reset --hard..\n' ;
+#else
+#	printf 'Failed to reset git branch\n' ;
+#	exit 1 ;
+#fi
+
+git -C ${GIT_REPO_WORKDIR} reset --hard
+
+#do a git pull in case the commit or tag is new
+#git pull origin master
+#if [ $? -eq 0 ] ; then
+#printf 'Pulling the latest commits from origin..\n' ;
+#else
+#	printf 'Failed to pull from git origin repository\n' ;
+#	exit 1 ;
+#fi
+
+git -C ${GIT_REPO_WORKDIR} pull origin master
+
+
+#check out our commit
+
+if [ -e ${BUILDDIR} ]; then
+    printf 'Build directory %s already exists.\n' ${BUILDDIR} ;
+else
+    printf 'Build directory %s does not exist.\nChecking out commit %s..\n' ${BUILDDIR} ${COMMIT} ;
+	git -C ${GIT_REPO_WORKDIR} archive -o ${ZIPDIR}/${ZIPNAME} ${COMMIT} ;
+	unzip ${ZIPDIR}/${ZIPNAME} -d ${BUILDDIR} ;
+
+	#create build directory for native build (for build system)
+	mkdir -p ${BUILDDIR}/build-linux ;
+	#create build directory for windows cross-build
+	mkdir -p ${BUILDDIR}/build-win ;
+fi
+
+#decompress library dependencies
+
+if [ ! -e "${BUILDDIR}/deps-win" ]; then
+	mkdir -p ${BUILDDIR}/deps-win ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/gc-7.2" ]; then
+	tar -zxvf ${DEPSDIR}/gc-7.2e.tar.gz -C ${BUILDDIR}/deps-win/ ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/gettext-0.19.7" ]; then
+	tar -zxvf ${DEPSDIR}/gettext-latest.tar.gz -C ${BUILDDIR}/deps-win/ ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/gmp-6.1.0" ]; then
+	tar -xvf ${DEPSDIR}/gmp-6.1.0.tar.lz -C ${BUILDDIR}/deps-win/ ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/libffi-3.2.1" ]; then
+	tar -zxvf ${DEPSDIR}/libffi-3.2.1.tar.gz -C ${BUILDDIR}/deps-win/ ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/libiconv-1.14" ]; then
+	tar -zxvf ${DEPSDIR}/libiconv-1.14.tar.gz -C ${BUILDDIR}/deps-win/ ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/libtool-2.4.6" ]; then
+	tar -zxvf ${DEPSDIR}/libtool-2.4.6.tar.gz -C ${BUILDDIR}/deps-win/ ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/libunistring-0.9.5" ]; then
+	tar -xvf ${DEPSDIR}/libunistring-0.9.5.tar.xz -C ${BUILDDIR}/deps-win/ ;
+fi
+
+#create install directory
+mkdir -p ${PREFIX}
+
+
+#####################################################
+##           Start of dependency build             ##
+#####################################################
+
+#build libiconv (no deps)
+cd ${BUILDDIR}/deps-win/libiconv-1.14
+if [ ! -e "Makefile" ]; then
+	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring libiconv. Aborting." ;
+		exit 1 ;
+	fi
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "Error while building libiconv. Aborting." ;
+	exit 1 ;
+fi
+
+
+#build libgmp (no deps)
+cd ${BUILDDIR}/deps-win/gmp-6.1.0
+if [ ! -e "Makefile" ]; then
+	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring libgmp. Aborting." ;
+		exit 1 ;
+	fi
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "Error while building libgmp. Aborting." ;
+	exit 1 ;
+fi
+
+
+#build libffi (no deps)
+cd ${BUILDDIR}/deps-win/libffi-3.2.1
+if [ ! -e "Makefile" ]; then
+	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring libffi. Aborting." ;
+		exit 1 ;
+	fi
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "Error while building libffi. Aborting." ;
+	exit 1 ;
+fi
+#libffi puts its include in a weird place, needs a fix
+cp -R ${PREFIX}/lib/libffi-3.2.1/include/* ${PREFIX}/include/
+
+
+#build libtool / libltdl (no deps)
+cd ${BUILDDIR}/deps-win/libtool-2.4.6
+if [ ! -e "Makefile" ]; then
+	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring libtool. Aborting." ;
+		exit 1 ;
+	fi
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "Error while building libtool / libltdl. Aborting." ;
+	exit 1 ;
+fi
+
+
+#build libunistring (depends on libiconv)
+cd ${BUILDDIR}/deps-win/libunistring-0.9.5
+if [ ! -e "Makefile" ]; then
+	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring libunistring. Aborting." ;
+		exit 1 ;
+	fi
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "Error while building libunistring. Aborting." ;
+	exit 1 ;
+fi
+
+
+#build gettext / libintl / libasprintf (depends on libiconv, libunistring)
+cd ${BUILDDIR}/deps-win/gettext-0.19.7
+if [ ! -e "Makefile" ]; then
+	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring gettext / libintl. Aborting." ;
+		exit 1 ;
+	fi
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "Error while building gettext / libintl. Aborting." ;
+	exit 1 ;
+fi
+
+
+#build libatomic_ops
+cd ${BUILDDIR}/deps-win/gc-7.2/libatomic_ops
+if [ ! -e "Makefile" ]; then
+	./configure --host=i686-w64-mingw32 --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} ;
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring libatomic_ops. Aborting." ;
+		exit 1 ;
+	fi
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "Error while building libatomic_ops. Aborting." ;
+	exit 1 ;
+fi
+
+
+#build libgc (depends on libatomic_ops)
+cd ${BUILDDIR}/deps-win/gc-7.2
+make -f Makefile.direct CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ AS=i686-w64-mingw32-as RANLIB=i686-w64-mingw32-ranlib HOSTCC=gcc AO_INSTALL_DIR=${PREFIX} gc.a
+if [ $? -ne 0 ] ; then
+	printf "Error while building libgc. Aborting." ;
+	exit 1 ;
+fi
+#Not sure how to set PREFIX for Makefile.direct, so install manually instead
+cp gc.a ${PREFIX}/lib/libgc.a
+cp -r include ${PREFIX}/include/gc
+
+
+#####################################################
+##                Start of guile build             ##
+#####################################################
+
+cd ${BUILDDIR}
+
+#create ./configure script if needed
+if [ -e "configure" ]; then
+	printf "./configure exist. Skipping ./autogen.sh.\n" ;
+else
+	sh ./autogen.sh ;
+fi
+
+#Fixing a bug in libguile/stime.c (known to exist in 2.0.9 and 2.0.11)
+#A conditional enabling of HAVE_POSIX_CPUTIME meant for FreeBSD incorrectly triggers for MinGW
+#which tricks guile into thinking that MinGW implements clock_getcpuclockid
+#MinGW has limited pthread/pthread time support via winpthreads
+sed -i -e 's/#if defined _POSIX_CPUTIME \&\& defined CLOCK_PROCESS_CPUTIME_ID[ ]*$/#if defined _POSIX_CPUTIME \&\& defined CLOCK_PROCESS_CPUTIME_ID \&\& !defined WIN_PTHREADS_TIME_H/g' libguile/stime.c
+
+#Fixing a bug in lib/msvc-inval.c (fixed in 2.0.11, exists in 2.0.8)
+#Calling convention is incorrectly written as "cdecl" while the compiler expects "__cdecl"
+sed -i -e 's/ cdecl/ __cdecl/g' lib/msvc-inval.c
+
+#Build guile natively. Required for bootstrapping the Windows build
+cd ${BUILDDIR}/build-linux
+
+if [ -e "GNUmakefile" ]; then
+	printf "./configure already run. Skipping.\n" ;
+else
+	../configure --without-libiconv-prefix --with-threads --disable-deprecated --prefix=/usr/local
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring linux guile. Aborting." ;
+		exit 1 ;
+	fi
+fi
+make
+if [ $? -ne 0 ] ; then
+	printf "Error while building linux guile. Aborting." ;
+	exit 1 ;
+fi
+
+#Build for Windows.
+cd ${BUILDDIR}/build-win
+
+if [ -e "GNUmakefile" ]; then
+	printf "./configure already run. Skipping.\n" ;
+else
+	../configure --host=i686-w64-mingw32 --prefix=${PREFIX}/guile --enable-static=yes --enable-shared=no --disable-rpath --enable-debug-malloc --enable-guile-debug \
+--disable-deprecated --with-sysroot=${PREFIX} --without-threads PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
+LIBFFI_CFLAGS="-I${PREFIX}/include" LIBFFI_LIBS="-L${PREFIX}/lib -lffi" CC_FOR_BUILD=gcc \
+GUILE_FOR_BUILD=$BUILDDIR/build-linux/meta/guile \
+CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS} -lwinpthread" CXXFLAGS="${WIN_CXXFLAGS}" ;
+	if [ $? -ne 0 ] ; then
+		printf "Error while configuring windows guile. Aborting." ;
+		exit 1 ;
+	fi
+fi
+#make V=1 PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
+#LIBFFI_CFLAGS="-I${PREFIX}/include" LIBFFI_LIBS="-L${PREFIX}/lib -lffi" \
+#CC_FOR_BUILD=gcc GUILE_FOR_BUILD=$BUILDDIR/build-linux/meta/guile \
+#CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}"
+make V=1
+if [ $? -ne 0 ] ; then
+	printf "Error while building windows guile. Aborting." ;
+	exit 1 ;
+fi
+make install
+if [ $? -ne 0 ] ; then
+	printf "Error while deploying windows guile. Aborting." ;
+	exit 1 ;
+fi
+
+
+#Copy over remaining gcc shared libraries
+cp /usr/lib/gcc/i686-w64-mingw32/4.8/*.dll ${PREFIX}/bin
+cp /usr/i686-w64-mingw32/lib/*.dll ${PREFIX}/bin
+
+#Copy over unit tests
+cp -r ${BUILDDIR}/test-suite/ ${PREFIX}/guile/bin
+
+#Copy over additional files
+cp -r ${GUILE_AUTOMATIC_BASE_DIR}/base/* ${PREFIX}
+
+#Finallly, archive the build
+######zip -r ${PREFIX}.zip ${PREFIX}
+cd ${GUILE_AUTOMATIC_BASE_DIR}/binaries
+tar -zcvf guile-${COMMIT}.tar.gz guile-${COMMIT}
+exit 0
+
+
+
+##########################################################
+##                   Guile Bugs                         ##
+##########################################################
+# Guile 2.0.11 ./libguile/stime.c incorrectly thinks that MinGW has support for clock_getcpuclockid()
+# Fix by making the conditional macro HAVE_POSIX_CPUTIME on line 132 to not trigger on MinGW builds with libwinpthread. Add a check for WIN_PTHREADS_TIME_H, for example.
+
+# Guile 2.0.8 ./lib/msvc-inval.c incorrectly used "cdecl" where they mean "__cdecl"
+# Fix by replacing all instances of "cdecl" with "__cdecl"
+
+# Guile 2.0.0 and some other versions have a too old gnulib (compared to the compiler) which makes ./libs/stdio.h bail on line 477 with "gets: no such function".
+# The solution is to remove the _GL_WARN_ON_USE (gets, "gets is a security hole - use fgets instead");
+
+# Guile 2.0.0 and some other versions have syntax error in the documentation texi file, which texinfo 5 aborts on.
+# Some possible fixes:
+#   Use texinfo 4.13a or earlier
+#   Fix the errors manually
+#   Bypass the texi generation by specifying --enable-maintainer-mode to ./configure

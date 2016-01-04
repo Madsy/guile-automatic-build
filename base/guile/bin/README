@@ -1,0 +1,39 @@
+# README FOR RUNNING GUILE FOR WINDOWS
+
+In this directory you will find:
+
+check-guile.log		- Log generated after running the test suite
+guild				- Artifact from the build process
+guile-config		- Artifact from the build process
+guile-snarf			- Artifact from the build process
+guile.exe			- The guile application
+run-guile.bat		- A batch file for starting guile with the correct paths
+run-tests.bat		- A batch file for running the test suite and generate check-guile.log
+test-suite			- The test suite directory from the guile source
+
+Guild, guile-config and guile-snarf might be usable on Windows, but you will need
+some tools such as awk to use them, and guile must most likely be added to your system PATH.
+If you need these, consider running them from an MSYS environment.
+
+## run-guile.bat
+
+This batch file was made for convenience, so you can start guile without installing the
+environment variables it needs, or copy the shared libraries into a directory on the PATH.
+
+If you inspect the batch file, you can copy the environment variables from there
+and manually add them to the system-wide environment. The batch file is cleverly made
+to let you put the guile base directory anywhere you like. As such, this release works
+as a freestanding application with no absolute install paths.
+
+## run-tests.bat
+Running the tests like you do on Linux is broken because of a path issue either with guile
+itself, or with the ./test-suite/guile-test script. As such, this batch file is a workaround
+until the issue is fixed.
+
+Some tests in run-tests.bat are commented out. This is because they made the test suite crash
+and abort. The remaining tests might still fail, but they fail cleanly and allows the test suite
+to continue until the end and print a summary. In addition, some tests
+in the ./test-suite/tests directory might have been added after the run-tests.bat script was written.
+Manually add the missing ones (if any).
+
+
