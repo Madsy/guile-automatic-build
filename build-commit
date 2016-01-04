@@ -62,7 +62,7 @@ else
 	#create build directory for native build (for build system)
 	mkdir -p ${BUILDDIR}/build-linux ;
 	#create build directory for windows cross-build
-	mkdir -p ${BUILDDIR}/build-win ;
+	mkdir -p ${BUILDDIR}/build-win ;	
 fi
 
 #decompress library dependencies
@@ -245,6 +245,11 @@ if [ -e "configure" ]; then
 	sleep 2 ;
 else
 	sh ./autogen.sh ;
+	
+	#Patch libguile/Makefile.in to link statically against all libraries
+	printf "\n\nPatching ./libguile/Makefile.in..\n" ;
+	sleep 2 ;
+	sed -i -e 's/^guile_LDFLAGS = .*$/guile_LDFLAGS = -all-static/g' ${BUILDDIR}/libguile/Makefile.in ;
 fi
 
 #Fixing a bug in libguile/stime.c (known to exist in 2.0.9 and 2.0.11)
@@ -313,11 +318,11 @@ if [ $? -ne 0 ] ; then
 fi
 
 
-#Copy over remaining gcc shared libraries (FIX THIS TO BE PORTABLE)
-printf "\nCopying over MinGW/GCC shared libraries..\n"
+#Erase unnecessary shared libraries that was installed.
+#We build statically anyway
+printf "\nErasing shared libraries we don't need..\n"
 sleep 2
-cp /usr/lib/gcc/i686-w64-mingw32/4.8/*.dll ${PREFIX}/bin
-cp /usr/i686-w64-mingw32/lib/*.dll ${PREFIX}/bin
+rm ${PREFIX}/bin/*.dll
 
 #Copy over unit tests
 printf "\nCopying over the test suite..\n"
