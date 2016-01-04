@@ -33,8 +33,9 @@ printf 'Building commit %s..\n' ${COMMIT}
 if [ -e "guile-git/.git" ]; then
     printf 'guile-git/.git exists\n'
 else
-    printf 'guile-git does not exist\n'
-    printf 'downloading git repo..'
+    printf '\nguile-git/.git does not exist\n' ;
+    printf '\ndownloading git repo..\n\n' ;
+    sleep 2 ;
     #if guile-git exists but not its .git directory,
     #delete guile-git, or else git complains about the destination existing
     if [ -e "guile-git" ]; then
@@ -44,35 +45,17 @@ else
 fi
 
 #clean working directory so we are sure we can pull
-#cd $GUILE_AUTOMATIC_BASE_DIR/guile-git
-#git reset --hard
-#if [ $? -eq 0 ] ; then
-#printf 'Reset git branch with git reset --hard..\n' ;
-#else
-#	printf 'Failed to reset git branch\n' ;
-#	exit 1 ;
-#fi
-
 git -C ${GIT_REPO_WORKDIR} reset --hard
 
 #do a git pull in case the commit or tag is new
-#git pull origin master
-#if [ $? -eq 0 ] ; then
-#printf 'Pulling the latest commits from origin..\n' ;
-#else
-#	printf 'Failed to pull from git origin repository\n' ;
-#	exit 1 ;
-#fi
-
 git -C ${GIT_REPO_WORKDIR} pull origin master
 
-
-#check out our commit
-
+#check out our commit via git archive
 if [ -e ${BUILDDIR} ]; then
-    printf 'Build directory %s already exists.\n' ${BUILDDIR} ;
+    printf '\nBuild directory %s already exists.\n' ${BUILDDIR} ;
 else
-    printf 'Build directory %s does not exist.\nChecking out commit %s..\n' ${BUILDDIR} ${COMMIT} ;
+    printf '\nBuild directory %s does not exist.\nChecking out commit %s..\n' ${BUILDDIR} ${COMMIT} ;
+    sleep 2 ;
 	git -C ${GIT_REPO_WORKDIR} archive -o ${ZIPDIR}/${ZIPNAME} ${COMMIT} ;
 	unzip ${ZIPDIR}/${ZIPNAME} -d ${BUILDDIR} ;
 
@@ -129,13 +112,13 @@ cd ${BUILDDIR}/deps-win/libiconv-1.14
 if [ ! -e "Makefile" ]; then
 	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring libiconv. Aborting." ;
+		printf "\nError while configuring libiconv. Aborting." ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "Error while building libiconv. Aborting." ;
+	printf "\nError while building libiconv. Aborting." ;
 	exit 1 ;
 fi
 
@@ -145,13 +128,13 @@ cd ${BUILDDIR}/deps-win/gmp-6.1.0
 if [ ! -e "Makefile" ]; then
 	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring libgmp. Aborting." ;
+		printf "\nError while configuring libgmp. Aborting." ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "Error while building libgmp. Aborting." ;
+	printf "\nError while building libgmp. Aborting." ;
 	exit 1 ;
 fi
 
@@ -161,7 +144,7 @@ cd ${BUILDDIR}/deps-win/libffi-3.2.1
 if [ ! -e "Makefile" ]; then
 	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring libffi. Aborting." ;
+		printf "\nError while configuring libffi. Aborting." ;
 		exit 1 ;
 	fi
 fi
@@ -179,13 +162,13 @@ cd ${BUILDDIR}/deps-win/libtool-2.4.6
 if [ ! -e "Makefile" ]; then
 	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring libtool. Aborting." ;
+		printf "\nError while configuring libtool. Aborting." ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "Error while building libtool / libltdl. Aborting." ;
+	printf "\nError while building libtool / libltdl. Aborting." ;
 	exit 1 ;
 fi
 
@@ -195,13 +178,13 @@ cd ${BUILDDIR}/deps-win/libunistring-0.9.5
 if [ ! -e "Makefile" ]; then
 	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring libunistring. Aborting." ;
+		printf "\nError while configuring libunistring. Aborting." ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "Error while building libunistring. Aborting." ;
+	printf "\nError while building libunistring. Aborting." ;
 	exit 1 ;
 fi
 
@@ -211,13 +194,13 @@ cd ${BUILDDIR}/deps-win/gettext-0.19.7
 if [ ! -e "Makefile" ]; then
 	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring gettext / libintl. Aborting." ;
+		printf "\nError while configuring gettext / libintl. Aborting." ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "Error while building gettext / libintl. Aborting." ;
+	printf "\nError while building gettext / libintl. Aborting." ;
 	exit 1 ;
 fi
 
@@ -227,13 +210,13 @@ cd ${BUILDDIR}/deps-win/gc-7.2/libatomic_ops
 if [ ! -e "Makefile" ]; then
 	./configure --host=i686-w64-mingw32 --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring libatomic_ops. Aborting." ;
+		printf "\nError while configuring libatomic_ops. Aborting." ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "Error while building libatomic_ops. Aborting." ;
+	printf "\nError while building libatomic_ops. Aborting." ;
 	exit 1 ;
 fi
 
@@ -242,7 +225,7 @@ fi
 cd ${BUILDDIR}/deps-win/gc-7.2
 make -f Makefile.direct CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ AS=i686-w64-mingw32-as RANLIB=i686-w64-mingw32-ranlib HOSTCC=gcc AO_INSTALL_DIR=${PREFIX} gc.a
 if [ $? -ne 0 ] ; then
-	printf "Error while building libgc. Aborting." ;
+	printf "\nError while building libgc. Aborting." ;
 	exit 1 ;
 fi
 #Not sure how to set PREFIX for Makefile.direct, so install manually instead
@@ -258,7 +241,8 @@ cd ${BUILDDIR}
 
 #create ./configure script if needed
 if [ -e "configure" ]; then
-	printf "./configure exist. Skipping ./autogen.sh.\n" ;
+	printf "\n./configure exist. Skipping ./autogen.sh.\n" ;
+	sleep 2 ;
 else
 	sh ./autogen.sh ;
 fi
@@ -281,17 +265,18 @@ sed -i -e 's/_GL_WARN_ON_USE (gets, \"gets is a security hole - use fgets instea
 cd ${BUILDDIR}/build-linux
 
 if [ -e "GNUmakefile" ]; then
-	printf "./configure already run. Skipping.\n" ;
+	printf "\n./configure already run. Skipping.\n" ;
+	sleep 2 ;
 else
 	../configure --without-libiconv-prefix --with-threads --disable-deprecated --prefix=/usr/local
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring linux guile. Aborting." ;
+		printf "\nError while configuring linux guile. Aborting." ;
 		exit 1 ;
 	fi
 fi
 make
 if [ $? -ne 0 ] ; then
-	printf "Error while building linux guile. Aborting." ;
+	printf "\nError while building linux guile. Aborting." ;
 	exit 1 ;
 fi
 
@@ -299,7 +284,8 @@ fi
 cd ${BUILDDIR}/build-win
 
 if [ -e "GNUmakefile" ]; then
-	printf "./configure already run. Skipping.\n" ;
+	printf "\n./configure already run. Skipping.\n" ;
+	sleep 2 ;
 else
 	../configure --host=i686-w64-mingw32 --prefix=${PREFIX}/guile --enable-static=yes --enable-shared=no --disable-rpath --enable-debug-malloc --enable-guile-debug \
 --disable-deprecated --with-sysroot=${PREFIX} --without-threads PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
@@ -307,7 +293,7 @@ LIBFFI_CFLAGS="-I${PREFIX}/include" LIBFFI_LIBS="-L${PREFIX}/lib -lffi" CC_FOR_B
 GUILE_FOR_BUILD=$BUILDDIR/build-linux/meta/guile \
 CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS} -lwinpthread" CXXFLAGS="${WIN_CXXFLAGS}" ;
 	if [ $? -ne 0 ] ; then
-		printf "Error while configuring windows guile. Aborting." ;
+		printf "\nError while configuring windows guile. Aborting." ;
 		exit 1 ;
 	fi
 fi
@@ -317,24 +303,30 @@ fi
 #CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}"
 make V=1
 if [ $? -ne 0 ] ; then
-	printf "Error while building windows guile. Aborting." ;
+	printf "\nError while building windows guile. Aborting." ;
 	exit 1 ;
 fi
 make install
 if [ $? -ne 0 ] ; then
-	printf "Error while deploying windows guile. Aborting." ;
+	printf "\nError while deploying windows guile. Aborting." ;
 	exit 1 ;
 fi
 
 
-#Copy over remaining gcc shared libraries
+#Copy over remaining gcc shared libraries (FIX THIS TO BE PORTABLE)
+printf "\nCopying over MinGW/GCC shared libraries..\n"
+sleep 2
 cp /usr/lib/gcc/i686-w64-mingw32/4.8/*.dll ${PREFIX}/bin
 cp /usr/i686-w64-mingw32/lib/*.dll ${PREFIX}/bin
 
 #Copy over unit tests
+printf "\nCopying over the test suite..\n"
+sleep 2
 cp -r ${BUILDDIR}/test-suite/ ${PREFIX}/guile/bin
 
 #Copy over additional files
+printf "\nCopying over scripts..\n"
+sleep 2
 cp -r ${GUILE_AUTOMATIC_BASE_DIR}/base/* ${PREFIX}
 
 #Finallly, archive the build
@@ -343,6 +335,7 @@ cd ${GUILE_AUTOMATIC_BASE_DIR}/binaries
 tar -zcvf guile-${COMMIT}.tar.gz guile-${COMMIT}
 
 cd ${GUILE_AUTOMATIC_BASE_DIR}
+printf "\nDone creating archive!\n"
 exit 0
 
 
