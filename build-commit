@@ -1,9 +1,6 @@
 #!/bin/sh
 
-#remember to install the dependencies
-#sudo aptitude gcc g++ build-essential make automake autoconf texinfo lzip yacc flex libtool \
-#libgmp-dev libffi-dev libunistring-dev libreadline6-dev libreadline6 libgc-dev
-
+HOST_CC=i686-w64-mingw32
 COMMIT=$1
 GUILE_AUTOMATIC_BASE_DIR=$PWD
 PREFIX=${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${COMMIT}
@@ -19,6 +16,7 @@ GIT_REPO_DIR=${GIR_REPO_WORKDIR}/.git
 
 
 printf "COMMIT: %s\n" ${COMMIT}
+printf "HOST_CC Host Compiler: %s\n" ${HOST_CC}
 printf "GUILE_AUTOMATIC_BASE_DIR: %s\n" ${GUILE_AUTOMATIC_BASE_DIR}
 printf "PREFIX: %s\n" ${PREFIX}
 printf "WIN_CFLAGS: %s\n" ${WIN_CFLAGS}
@@ -29,6 +27,46 @@ printf "ZIPNAME: %s\n" ${ZIPNAME}
 printf "BUILDDIR: %s\n" ${BUILDDIR}
 
 printf 'Building commit %s..\n' ${COMMIT}
+
+#Help the user by ensuring that we have the host MINGW toolchain available on the PATH.
+printf "Testing whether ${HOST_CC}-gcc exists..\n"
+if [ -z `which ${HOST_CC}-gcc` ]; then
+	printf 'Could not find %s!\n' ${HOST_CC}-gcc ;
+	exit 1 ;
+else
+	printf 'Found %s\n' ${HOST_CC}-gcc ;
+fi
+printf "Testing whether ${HOST_CC}-g++ exists..\n"
+if [ -z `which ${HOST_CC}-g++` ]; then
+	printf 'Could not find %s!\n' ${HOST_CC}-g++ ;
+	exit 1 ;
+else
+	printf 'Found %s\n' ${HOST_CC}-g++ ;
+fi
+printf "Testing whether ${HOST_CC}-cpp exists..\n"
+if [ -z `which ${HOST_CC}-cpp` ]; then
+	printf 'Could not find %s!\n' ${HOST_CC}-cpp ;
+	exit 1 ;
+else
+	printf 'Found %s\n' ${HOST_CC}-cpp ;
+fi
+printf "Testing whether ${HOST_CC}-as exists..\n"
+if [ -z `which ${HOST_CC}-as` ]; then
+	printf 'Could not find %s!\n' ${HOST_CC}-as ;
+	exit 1 ;
+else
+	printf 'Found %s\n' ${HOST_CC}-as ;
+fi
+printf "Testing whether ${HOST_CC}-ld exists..\n"
+if [ -z `which ${HOST_CC}-ld` ]; then
+	printf 'Could not find %s!\n' ${HOST_CC}-ld ;
+	exit 1 ;
+else
+	printf 'Found %s\n' ${HOST_CC}-ld ;
+fi
+
+printf 'OK!\n'
+sleep 3
 
 if [ -e "guile-git/.git" ]; then
     printf 'guile-git/.git exists\n'
@@ -140,7 +178,7 @@ TEXI2PDF=$(TEXI2DVI) --pdf --batch
 #build libiconv (no deps)
 cd ${BUILDDIR}/deps-win/libiconv-1.14
 if [ ! -e "Makefile" ]; then
-	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libiconv. Aborting." ;
 		exit 1 ;
@@ -156,7 +194,7 @@ fi
 #build libgmp (no deps)
 cd ${BUILDDIR}/deps-win/gmp-6.1.0
 if [ ! -e "Makefile" ]; then
-	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libgmp. Aborting." ;
 		exit 1 ;
@@ -172,7 +210,7 @@ fi
 #build libffi (no deps)
 cd ${BUILDDIR}/deps-win/libffi-3.2.1
 if [ ! -e "Makefile" ]; then
-	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libffi. Aborting." ;
 		exit 1 ;
@@ -190,7 +228,7 @@ cp -R ${PREFIX}/lib/libffi-3.2.1/include/* ${PREFIX}/include/
 #build libtool / libltdl (no deps)
 cd ${BUILDDIR}/deps-win/libtool-2.4.6
 if [ ! -e "Makefile" ]; then
-	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libtool. Aborting." ;
 		exit 1 ;
@@ -206,7 +244,7 @@ fi
 #build libunistring (depends on libiconv)
 cd ${BUILDDIR}/deps-win/libunistring-0.9.5
 if [ ! -e "Makefile" ]; then
-	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libunistring. Aborting." ;
 		exit 1 ;
@@ -222,7 +260,7 @@ fi
 #build gettext / libintl / libasprintf (depends on libiconv, libunistring)
 cd ${BUILDDIR}/deps-win/gettext-0.19.7
 if [ ! -e "Makefile" ]; then
-	./configure --host=i686-w64-mingw32 --disable-threads --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
+	./configure --host=${HOST_CC} --disable-threads --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring gettext / libintl. Aborting." ;
 		exit 1 ;
@@ -238,7 +276,7 @@ fi
 #build libatomic_ops
 cd ${BUILDDIR}/deps-win/gc-7.2/libatomic_ops
 if [ ! -e "Makefile" ]; then
-	./configure --host=i686-w64-mingw32 --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} ;
+	./configure --host=${HOST_CC} --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libatomic_ops. Aborting." ;
 		exit 1 ;
@@ -253,7 +291,7 @@ fi
 
 #build libgc (depends on libatomic_ops)
 cd ${BUILDDIR}/deps-win/gc-7.2
-make -f Makefile.direct CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ AS=i686-w64-mingw32-as RANLIB=i686-w64-mingw32-ranlib HOSTCC=gcc AO_INSTALL_DIR=${PREFIX} gc.a
+make -f Makefile.direct CC=${HOST_CC}-gcc CXX=${HOST_CC}-g++ AS=${HOST_CC}-as RANLIB=${HOST_CC}-ranlib HOSTCC=gcc AO_INSTALL_DIR=${PREFIX} gc.a
 if [ $? -ne 0 ] ; then
 	printf "\nError while building libgc. Aborting." ;
 	exit 1 ;
@@ -324,7 +362,7 @@ if [ -e "GNUmakefile" ]; then
 	printf "\n./configure already run. Skipping.\n" ;
 	sleep 2 ;
 else
-	../configure --host=i686-w64-mingw32 --prefix=${PREFIX}/guile --enable-static=yes --enable-shared=no --disable-rpath --enable-debug-malloc --enable-guile-debug \
+	../configure --host=${HOST_CC} --prefix=${PREFIX}/guile --enable-static=yes --enable-shared=no --disable-rpath --enable-debug-malloc --enable-guile-debug \
 --disable-deprecated --with-sysroot=${PREFIX} --without-threads PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
 LIBFFI_CFLAGS="-I${PREFIX}/include" LIBFFI_LIBS="-L${PREFIX}/lib -lffi" CC_FOR_BUILD=gcc \
 GUILE_FOR_BUILD=$BUILDDIR/build-linux/meta/guile \
