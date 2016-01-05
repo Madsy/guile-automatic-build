@@ -8,6 +8,11 @@ for Windows. It checks out a commit (referenced by tag or commit hash) from
 the git.sv.gnu.org repository and builds it with the MinGW-w64 toolchain.
 Currently this script is only tested on Ubuntu 14.04.
 
+License
+-------------------------------------------------------------------------------
+As this script patches up the GNU Guile code and Guile is under GPL, this
+script should be considered to be under the GPL license as well
+
 How to use
 -------------------------------------------------------------------------------
 
@@ -34,9 +39,11 @@ however you should ensure that you have all the tools required. Below is a list
 of packages, with the names from Ubuntu 14.04. The libraries are only required
 for the native guile build:
 
+	git
     mingw-w64
     mingw-w64-tools
     build-essential
+    binutils-mingw-w64
     make
     automake
     autoconf
@@ -44,7 +51,10 @@ for the native guile build:
     lzip
     flex
     bison
-    libtool
+    gettext
+    gettext-base
+    libtool (and libtool-bin on Debian)
+    libgettextpo-dev
     libgmp-dev
     libffi-dev
     libunistring-dev
@@ -94,3 +104,4 @@ to ./configure
 Note that the texinfo bug is not automatically patched/fixed by
 this script yet.
 I might add a manual build of texinfo 4.13a later.
+

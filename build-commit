@@ -65,6 +65,15 @@ else
 	mkdir -p ${BUILDDIR}/build-win ;	
 fi
 
+#decompress texinfo dependency (used for old builds like 2.0.0)
+
+if [ ! -e "${BUILDDIR}/deps-shared" ]; then
+	mkdir -p ${BUILDDIR}/deps-shared ;
+fi
+if [ ! -e "${BUILDDIR}/deps-shared/texinfo-4.13" ]; then
+	tar -zxvf ${DEPSDIR}/texinfo-4.13.tar.gz -C ${BUILDDIR}/deps-shared/ ;
+fi
+
 #decompress library dependencies
 
 if [ ! -e "${BUILDDIR}/deps-win" ]; then
@@ -106,6 +115,27 @@ mkdir -p ${PREFIX}
 #####################################################
 ##           Start of dependency build             ##
 #####################################################
+
+#build texinfo 4.13, which is required for old guile versions
+#used by both the native build and the Windows build of Guile
+#so it is put in ${BUILDDIR}/deps-shared
+
+cd ${BUILDDIR}/deps-shared/texinfo-4.13
+if [ ! -e "Makefile" ]; then
+	./configure --without-libiconv-prefix --prefix ${BUILDDIR}/deps-shared/bins ;
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while building texinfo. Aborting." ;
+	exit 1 ;
+fi
+
+#Now we can set ${MAKEINFO} and ${TEXI2DVI} to point
+#to the texinfo binaries in ${BUILDDIR}/deps-shared/bins/bin/
+
+MAKEINFO=${BUILDDIR}/deps-shared/bins/bin/makeinfo
+TEXI2DVI=${BUILDDIR}/deps-shared/bins/bin/texi2dvi
+TEXI2PDF=$(TEXI2DVI) --pdf --batch
 
 #build libiconv (no deps)
 cd ${BUILDDIR}/deps-win/libiconv-1.14
@@ -192,7 +222,7 @@ fi
 #build gettext / libintl / libasprintf (depends on libiconv, libunistring)
 cd ${BUILDDIR}/deps-win/gettext-0.19.7
 if [ ! -e "Makefile" ]; then
-	./configure --host=i686-w64-mingw32 --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
+	./configure --host=i686-w64-mingw32 --disable-threads --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring gettext / libintl. Aborting." ;
 		exit 1 ;
@@ -273,7 +303,9 @@ if [ -e "GNUmakefile" ]; then
 	printf "\n./configure already run. Skipping.\n" ;
 	sleep 2 ;
 else
-	../configure --without-libiconv-prefix --with-threads --disable-deprecated --prefix=/usr/local
+	../configure --without-libiconv-prefix --with-threads --disable-deprecated --prefix=/usr/local \
+MAKEINFO=${MAKEINFO} TEXI2DVI=${TEXI2DVI} ;
+
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring linux guile. Aborting." ;
 		exit 1 ;
@@ -296,7 +328,9 @@ else
 --disable-deprecated --with-sysroot=${PREFIX} --without-threads PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
 LIBFFI_CFLAGS="-I${PREFIX}/include" LIBFFI_LIBS="-L${PREFIX}/lib -lffi" CC_FOR_BUILD=gcc \
 GUILE_FOR_BUILD=$BUILDDIR/build-linux/meta/guile \
-CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS} -lwinpthread" CXXFLAGS="${WIN_CXXFLAGS}" ;
+CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS} -lwinpthread" \
+CXXFLAGS="${WIN_CXXFLAGS}" MAKEINFO=${MAKEINFO} TEXI2DVI=${TEXI2DVI} ;
+
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring windows guile. Aborting." ;
 		exit 1 ;
