@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
 HOST_CC=i686-w64-mingw32
 COMMIT=$1
 GUILE_AUTOMATIC_BASE_DIR=$PWD
 PREFIX=${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${COMMIT}
 WIN_CFLAGS="-I${PREFIX}/include"
+LIBICONV_CFLAGS="${WIN_CFLAGS} --std=gnu89"
 WIN_CXXFLAGS="-I${PREFIX}/include"
 WIN_LDFLAGS="-L${PREFIX}/lib"
 ZIPDIR=${GUILE_AUTOMATIC_BASE_DIR}/zips
@@ -14,19 +15,6 @@ DEPSDIR=${GUILE_AUTOMATIC_BASE_DIR}/deps
 GIT_REPO_WORKDIR=${GUILE_AUTOMATIC_BASE_DIR}/guile-git
 GIT_REPO_DIR=${GIR_REPO_WORKDIR}/.git
 
-
-printf "COMMIT: %s\n" ${COMMIT}
-printf "HOST_CC Host Compiler: %s\n" ${HOST_CC}
-printf "GUILE_AUTOMATIC_BASE_DIR: %s\n" ${GUILE_AUTOMATIC_BASE_DIR}
-printf "PREFIX: %s\n" ${PREFIX}
-printf "WIN_CFLAGS: %s\n" ${WIN_CFLAGS}
-printf "WIN_CXXFLAGS: %s\n" ${WIN_CXXFLAGS}
-printf "WIN_LDFLAGS: %s\n" ${WIN_LDFLAGS}
-printf "ZIPDIR: %s\n" ${ZIPDIR}
-printf "ZIPNAME: %s\n" ${ZIPNAME}
-printf "BUILDDIR: %s\n" ${BUILDDIR}
-
-printf 'Building commit %s..\n' ${COMMIT}
 
 #Help the user by ensuring that we have the host MINGW toolchain available on the PATH.
 printf "Testing whether ${HOST_CC}-gcc exists..\n"
@@ -66,13 +54,28 @@ else
 fi
 
 printf 'OK!\n'
-sleep 3
+sleep 1
+
+printf "COMMIT: %s\n" ${COMMIT}
+printf "HOST_CC Host Compiler: %s\n" ${HOST_CC}
+printf "GUILE_AUTOMATIC_BASE_DIR: %s\n" ${GUILE_AUTOMATIC_BASE_DIR}
+printf "PREFIX: %s\n" ${PREFIX}
+printf "WIN_CFLAGS: %s\n" ${WIN_CFLAGS}
+printf "WIN_CXXFLAGS: %s\n" ${WIN_CXXFLAGS}
+printf "WIN_LDFLAGS: %s\n" ${WIN_LDFLAGS}
+printf "ZIPDIR: %s\n" ${ZIPDIR}
+printf "ZIPNAME: %s\n" ${ZIPNAME}
+printf "BUILDDIR: %s\n" ${BUILDDIR}
+
+printf 'Going to building commit %s.\n' ${COMMIT}
+#printf 'Press return to continue\n'
+
+read  -n 1 -p "Press return to continue"
 
 if [ -e "guile-git/.git" ]; then
     printf 'guile-git/.git exists\n'
 else
-    printf '\nguile-git/.git does not exist\n' ;
-    printf '\ndownloading git repo..\n\n' ;
+    printf '\nguile-git/.git does not exist. Downloading git repo..\n\n' ;
     sleep 2 ;
     #if guile-git exists but not its .git directory,
     #delete guile-git, or else git complains about the destination existing
@@ -164,7 +167,7 @@ if [ ! -e "Makefile" ]; then
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "\nError while building texinfo. Aborting." ;
+	printf "\nError while building texinfo. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -173,20 +176,20 @@ fi
 
 MAKEINFO=${BUILDDIR}/deps-shared/bins/bin/makeinfo
 TEXI2DVI=${BUILDDIR}/deps-shared/bins/bin/texi2dvi
-TEXI2PDF=$(TEXI2DVI) --pdf --batch
+TEXI2PDF="${TEXI2DVI} --pdf --batch"
 
 #build libiconv (no deps)
 cd ${BUILDDIR}/deps-win/libiconv-1.14
 if [ ! -e "Makefile" ]; then
-	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${LIBICONV_CFLAGS}" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring libiconv. Aborting." ;
+		printf "\nError while configuring libiconv. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "\nError while building libiconv. Aborting." ;
+	printf "\nError while building libiconv. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -196,13 +199,13 @@ cd ${BUILDDIR}/deps-win/gmp-6.1.0
 if [ ! -e "Makefile" ]; then
 	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring libgmp. Aborting." ;
+		printf "\nError while configuring libgmp. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "\nError while building libgmp. Aborting." ;
+	printf "\nError while building libgmp. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -212,13 +215,13 @@ cd ${BUILDDIR}/deps-win/libffi-3.2.1
 if [ ! -e "Makefile" ]; then
 	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring libffi. Aborting." ;
+		printf "\nError while configuring libffi. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "Error while building libffi. Aborting." ;
+	printf "Error while building libffi. Aborting.\n" ;
 	exit 1 ;
 fi
 #libffi puts its include in a weird place, needs a fix
@@ -230,13 +233,13 @@ cd ${BUILDDIR}/deps-win/libtool-2.4.6
 if [ ! -e "Makefile" ]; then
 	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring libtool. Aborting." ;
+		printf "\nError while configuring libtool. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "\nError while building libtool / libltdl. Aborting." ;
+	printf "\nError while building libtool / libltdl. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -246,13 +249,13 @@ cd ${BUILDDIR}/deps-win/libunistring-0.9.5
 if [ ! -e "Makefile" ]; then
 	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring libunistring. Aborting." ;
+		printf "\nError while configuring libunistring. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "\nError while building libunistring. Aborting." ;
+	printf "\nError while building libunistring. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -262,13 +265,13 @@ cd ${BUILDDIR}/deps-win/gettext-0.19.7
 if [ ! -e "Makefile" ]; then
 	./configure --host=${HOST_CC} --disable-threads --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring gettext / libintl. Aborting." ;
+		printf "\nError while configuring gettext / libintl. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "\nError while building gettext / libintl. Aborting." ;
+	printf "\nError while building gettext / libintl. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -278,13 +281,13 @@ cd ${BUILDDIR}/deps-win/gc-7.2/libatomic_ops
 if [ ! -e "Makefile" ]; then
 	./configure --host=${HOST_CC} --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} ;
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring libatomic_ops. Aborting." ;
+		printf "\nError while configuring libatomic_ops. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
 make && make install
 if [ $? -ne 0 ] ; then
-	printf "\nError while building libatomic_ops. Aborting." ;
+	printf "\nError while building libatomic_ops. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -293,7 +296,7 @@ fi
 cd ${BUILDDIR}/deps-win/gc-7.2
 make -f Makefile.direct CC=${HOST_CC}-gcc CXX=${HOST_CC}-g++ AS=${HOST_CC}-as RANLIB=${HOST_CC}-ranlib HOSTCC=gcc AO_INSTALL_DIR=${PREFIX} gc.a
 if [ $? -ne 0 ] ; then
-	printf "\nError while building libgc. Aborting." ;
+	printf "\nError while building libgc. Aborting.\n" ;
 	exit 1 ;
 fi
 #Not sure how to set PREFIX for Makefile.direct, so install manually instead
@@ -345,13 +348,13 @@ else
 MAKEINFO=${MAKEINFO} TEXI2DVI=${TEXI2DVI} ;
 
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring linux guile. Aborting." ;
+		printf "\nError while configuring linux guile. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
 make
 if [ $? -ne 0 ] ; then
-	printf "\nError while building linux guile. Aborting." ;
+	printf "\nError while building linux guile. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -370,22 +373,19 @@ CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS} -lwinpthread" \
 CXXFLAGS="${WIN_CXXFLAGS}" MAKEINFO=${MAKEINFO} TEXI2DVI=${TEXI2DVI} ;
 
 	if [ $? -ne 0 ] ; then
-		printf "\nError while configuring windows guile. Aborting." ;
+		printf "\nError while configuring windows guile. Aborting.\n" ;
 		exit 1 ;
 	fi
 fi
-#make V=1 PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
-#LIBFFI_CFLAGS="-I${PREFIX}/include" LIBFFI_LIBS="-L${PREFIX}/lib -lffi" \
-#CC_FOR_BUILD=gcc GUILE_FOR_BUILD=$BUILDDIR/build-linux/meta/guile \
-#CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}"
+
 make V=1
 if [ $? -ne 0 ] ; then
-	printf "\nError while building windows guile. Aborting." ;
+	printf "\nError while building windows guile. Aborting.\n" ;
 	exit 1 ;
 fi
 make install
 if [ $? -ne 0 ] ; then
-	printf "\nError while deploying windows guile. Aborting." ;
+	printf "\nError while deploying windows guile. Aborting.\n" ;
 	exit 1 ;
 fi
 
@@ -413,6 +413,7 @@ tar -zcvf guile-${COMMIT}.tar.gz guile-${COMMIT}
 
 cd ${GUILE_AUTOMATIC_BASE_DIR}
 printf "\nDone creating archive!\n"
+printf "The redistributable archive is located at ${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${COMMIT}.tar.gz\n"
 exit 0
 
 
