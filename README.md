@@ -6,12 +6,25 @@ About guile-automatic-build
 guile-automatic-build is a single bash script for cross-compiling GNU/Guile
 for Windows. It checks out a commit (referenced by tag or commit hash) from
 the git.sv.gnu.org repository and builds it with the MinGW-w64 toolchain.
-Currently this script is only tested on Ubuntu Thrusty 14.04 and Debian 8 Jessie
+Currently this script is verified to run on:
+
+* Ubuntu Thrusty 14.04
+* Debian 8 Jessie
+* Debian Stretch (Testing)
+
+But it should work on all Linux-flavors with a bash-like shell given that all
+the library and tool dependencies are met.
 
 License
 -------------------------------------------------------------------------------
 As this script patches up the GNU Guile code and Guile is under GPL, this
-script should be considered to be under the GPL license as well
+script should be considered to be under the GPL license as well. (same GPL
+licence and version as Guile)
+
+Additional Contributors
+-------------------------------------------------------------------------------
+Kai-Martin Knaak
+
 
 How to use
 -------------------------------------------------------------------------------
@@ -140,7 +153,7 @@ The final layout for ./binaries/guile-v2.0.9 looks like this:
     lib <-- .a, .dll.a and libtool .la libraries for linking
     share <-- misc files installed by the libraries
 
-The guile directory looks like this:
+The ./binaries/guile-v2.0.9/guile directory looks like this:
 
     bin <-- guile.exe run-guile.bat and run-tests.bat lives here
     include <-- headers for guile if you want to embed guile in an application

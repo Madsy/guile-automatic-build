@@ -3,4 +3,17 @@
 GUILE_AUTOMATIC_BASE_DIR=$PWD
 GIT_REPO_WORKDIR=${GUILE_AUTOMATIC_BASE_DIR}/guile-git
 
+if [ -e "${GIT_REPO_WORKDIR}/.git" ]; then
+    printf "${GIT_REPO_WORKDIR}/.git exists\n"
+else
+    printf "\n${GIT_REPO_WORKDIR}/.git does not exist. Downloading git repo..\n\n" ;
+    sleep 2 ;
+    #if guile-git exists but not its .git directory,
+    #delete guile-git, or else git complains about the destination existing
+    if [ -e "${GIT_REPO_WORKDIR}" ]; then
+    	rm -rf "${GIT_REPO_WORKDIR}" ;
+    fi
+    git clone git://git.sv.gnu.org/guile.git ${GIT_REPO_WORKDIR}
+fi
+
 git -C ${GIT_REPO_WORKDIR} tag -l

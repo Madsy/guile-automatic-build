@@ -15,6 +15,21 @@ DEPSDIR=${GUILE_AUTOMATIC_BASE_DIR}/deps
 GIT_REPO_WORKDIR=${GUILE_AUTOMATIC_BASE_DIR}/guile-git
 GIT_REPO_DIR=${GIR_REPO_WORKDIR}/.git
 
+#Test if we have specified a valid git tag
+#Contribution from Kai-Martin Knaak june 12 2016
+#Use git cat-file -e $sha^{commit} to test if a commit hash exists
+TAGS=`git -C guile-git tag -l`
+git -C guile-git cat-file -e "${COMMIT}"
+GITCATFILE_RESULT=$?
+
+#printf "Result of git cat-file: ${GITCATFILE_RESULT}\n"
+
+if [ "${TAGS}" != *"${COMMIT}"* ] && [ ${GITCATFILE_RESULT} -ne 0 ] ; then
+    printf "Error: ${COMMIT} is not a valid commit tag or git hash.\n" ;
+    printf "Run ./list-tags to get a list of valid tags.\n" ;
+    printf "Exiting.\n" ;
+    exit 1 ;
+fi
 
 #Help the user by ensuring that we have the host MINGW toolchain available on the PATH.
 printf "Testing whether ${HOST_CC}-gcc exists..\n"
