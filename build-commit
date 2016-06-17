@@ -3,23 +3,23 @@
 ##HOST_CC=i686-w64-mingw32
 HOST_CC=${2-"x86_64-w64-mingw32"}
 COMMIT=$1
-GUILE_AUTOMATIC_BASE_DIR=$PWD
-PREFIX=${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${COMMIT}
+GUILE_AUTOMATIC_BASE_DIR="$PWD"
+PREFIX="${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${HOST_CC}-${COMMIT}"
 WIN_CFLAGS="-I${PREFIX}/include"
 LIBICONV_CFLAGS="${WIN_CFLAGS} --std=gnu89"
 WIN_CXXFLAGS="-I${PREFIX}/include"
 WIN_LDFLAGS="-L${PREFIX}/lib"
-ZIPDIR=${GUILE_AUTOMATIC_BASE_DIR}/zips
-ZIPNAME=guile-${COMMIT}.zip
-BUILDDIR=${GUILE_AUTOMATIC_BASE_DIR}/builds/guile-${COMMIT}
-DEPSDIR=${GUILE_AUTOMATIC_BASE_DIR}/deps
-GIT_REPO_WORKDIR=${GUILE_AUTOMATIC_BASE_DIR}/guile-git
+ZIPDIR="${GUILE_AUTOMATIC_BASE_DIR}/zips"
+ZIPNAME="guile-${HOST_CC}-${COMMIT}.zip"
+BUILDDIR="${GUILE_AUTOMATIC_BASE_DIR}/builds/guile-${COMMIT}"
+DEPSDIR="${GUILE_AUTOMATIC_BASE_DIR}/deps"
+GIT_REPO_WORKDIR="${GUILE_AUTOMATIC_BASE_DIR}/guile-git"
 GIT_REPO_DIR="${GIT_REPO_WORKDIR}/.git"
 
 if [ -e "${GIT_REPO_DIR}" ]; then
     printf "%s exists\n" ${GIT_REPO_DIR}
 else
-    printf "\n%s does not exist. Downloading git repo..\n\n" ${GIT_REPO_DIR};
+    printf "\n%s does not exist. Downloading git repo..\n\n" "${GIT_REPO_DIR}";
     sleep 2 ;
     #if guile-git exists but not its .git directory,
     #delete guile-git, or else git complains about the destination existing
@@ -33,10 +33,10 @@ fi
 #Contribution from Kai-Martin Knaak june 12 2016
 #Use git cat-file -e $sha^{commit} to test if a commit hash exists
 TAGS=`git -C ${GIT_REPO_WORKDIR} tag -l`
-git -C ${GIT_REPO_WORKDIR} cat-file -e "${COMMIT}"
+git -C "${GIT_REPO_WORKDIR}" cat-file -e "${COMMIT}"
 GITCATFILE_RESULT=$?
 
-if [ "${TAGS}" != *"${COMMIT}"* ] && [ ${GITCATFILE_RESULT} -ne 0 ] ; then
+if [ "${TAGS}" != *"${COMMIT}"* ] && [ "${GITCATFILE_RESULT}" -ne 0 ] ; then
     printf "Error: ${COMMIT} is not a valid commit tag or git hash.\n" ;
     printf "Run ./list-tags to get a list of valid tags.\n" ;
     printf "Exiting.\n" ;
@@ -46,125 +46,125 @@ fi
 #Help the user by ensuring that we have the host MINGW toolchain available on the PATH.
 printf "Testing whether ${HOST_CC}-gcc exists..\n"
 if [ -z `which ${HOST_CC}-gcc` ]; then
-	printf 'Could not find %s!\n' ${HOST_CC}-gcc ;
+	printf "Could not find %s!\n" "${HOST_CC}-gcc" ;
 	exit 1 ;
 else
-	printf 'Found %s\n' ${HOST_CC}-gcc ;
+	printf "Found %s\n" "${HOST_CC}-gcc" ;
 fi
 printf "Testing whether ${HOST_CC}-g++ exists..\n"
 if [ -z `which ${HOST_CC}-g++` ]; then
-	printf 'Could not find %s!\n' ${HOST_CC}-g++ ;
+	printf "Could not find %s!\n" "${HOST_CC}-g++" ;
 	exit 1 ;
 else
-	printf 'Found %s\n' ${HOST_CC}-g++ ;
+	printf "Found %s\n" "${HOST_CC}-g++" ;
 fi
 printf "Testing whether ${HOST_CC}-cpp exists..\n"
 if [ -z `which ${HOST_CC}-cpp` ]; then
-	printf 'Could not find %s!\n' ${HOST_CC}-cpp ;
+	printf "Could not find %s!\n" "${HOST_CC}-cpp" ;
 	exit 1 ;
 else
-	printf 'Found %s\n' ${HOST_CC}-cpp ;
+	printf "Found %s\n" "${HOST_CC}-cpp" ;
 fi
 printf "Testing whether ${HOST_CC}-as exists..\n"
 if [ -z `which ${HOST_CC}-as` ]; then
-	printf 'Could not find %s!\n' ${HOST_CC}-as ;
+	printf "Could not find %s!\n" "${HOST_CC}-as" ;
 	exit 1 ;
 else
-	printf 'Found %s\n' ${HOST_CC}-as ;
+	printf "Found %s\n" "${HOST_CC}-as" ;
 fi
 printf "Testing whether ${HOST_CC}-ld exists..\n"
 if [ -z `which ${HOST_CC}-ld` ]; then
-	printf 'Could not find %s!\n' ${HOST_CC}-ld ;
+	printf "Could not find %s!\n" "${HOST_CC}-ld" ;
 	exit 1 ;
 else
-	printf 'Found %s\n' ${HOST_CC}-ld ;
+	printf "Found %s\n" "${HOST_CC}-ld" ;
 fi
 
-printf 'OK!\n'
+printf "OK!\n"
 sleep 1
 
-printf "COMMIT: %s\n" ${COMMIT}
-printf "HOST_CC Host Compiler: %s\n" ${HOST_CC}
-printf "GUILE_AUTOMATIC_BASE_DIR: %s\n" ${GUILE_AUTOMATIC_BASE_DIR}
-printf "PREFIX: %s\n" ${PREFIX}
-printf "WIN_CFLAGS: %s\n" ${WIN_CFLAGS}
-printf "WIN_CXXFLAGS: %s\n" ${WIN_CXXFLAGS}
-printf "WIN_LDFLAGS: %s\n" ${WIN_LDFLAGS}
-printf "ZIPDIR: %s\n" ${ZIPDIR}
-printf "ZIPNAME: %s\n" ${ZIPNAME}
-printf "BUILDDIR: %s\n" ${BUILDDIR}
+printf "COMMIT: %s\n" "${COMMIT}"
+printf "HOST_CC Host Compiler: %s\n" "${HOST_CC}"
+printf "GUILE_AUTOMATIC_BASE_DIR: %s\n" "${GUILE_AUTOMATIC_BASE_DIR}"
+printf "PREFIX: %s\n" "${PREFIX}"
+printf "WIN_CFLAGS: %s\n" "${WIN_CFLAGS}"
+printf "WIN_CXXFLAGS: %s\n" "${WIN_CXXFLAGS}"
+printf "WIN_LDFLAGS: %s\n" "${WIN_LDFLAGS}"
+printf "ZIPDIR: %s\n" "${ZIPDIR}"
+printf "ZIPNAME: %s\n" "${ZIPNAME}"
+printf "BUILDDIR: %s\n" "${BUILDDIR}"
 
-printf 'Going to building commit %s.\n' ${COMMIT}
-#printf 'Press return to continue\n'
+printf "Going to building commit %s.\n" "${COMMIT}"
+#printf "Press return to continue\n"
 
 read  -n 1 -p "Press return to continue"
 
 #clean working directory so we are sure we can pull
-git -C ${GIT_REPO_WORKDIR} reset --hard
+git -C "${GIT_REPO_WORKDIR}" reset --hard
 
 #do a git pull in case the commit or tag is new
-git -C ${GIT_REPO_WORKDIR} pull origin master
+git -C "${GIT_REPO_WORKDIR}" pull origin master
 
 #check out our commit via git archive
-if [ -e ${BUILDDIR} ]; then
-    printf '\nBuild directory %s already exists.\n' ${BUILDDIR} ;
+if [ -e "${BUILDDIR}" ]; then
+    printf "\nBuild directory %s already exists.\n" "${BUILDDIR}" ;
 else
-    printf '\nBuild directory %s does not exist.\nChecking out commit %s..\n' ${BUILDDIR} ${COMMIT} ;
+    printf "\nBuild directory %s does not exist.\nChecking out commit %s..\n" "${BUILDDIR}" "${COMMIT}" ;
     sleep 2 ;
-	git -C ${GIT_REPO_WORKDIR} archive -o ${ZIPDIR}/${ZIPNAME} ${COMMIT} ;
-	unzip ${ZIPDIR}/${ZIPNAME} -d ${BUILDDIR} ;
+	git -C "${GIT_REPO_WORKDIR}" archive -o "${ZIPDIR}/${ZIPNAME}" "${COMMIT}" ;
+	unzip "${ZIPDIR}/${ZIPNAME}" -d "${BUILDDIR}" ;
 
 	#create build directory for native build (for build system)
-	mkdir -p ${BUILDDIR}/build-linux ;
+	mkdir -p "${BUILDDIR}/build-linux" ;
 	#create build directory for windows cross-build
-	mkdir -p ${BUILDDIR}/build-win ;	
+	mkdir -p "${BUILDDIR}/build-win" ;	
 fi
 
 #decompress texinfo dependency (used for old builds like 2.0.0)
 
 if [ ! -e "${BUILDDIR}/deps-shared" ]; then
-	mkdir -p ${BUILDDIR}/deps-shared ;
+	mkdir -p "${BUILDDIR}/deps-shared" ;
 fi
 if [ ! -e "${BUILDDIR}/deps-shared/texinfo-4.13" ]; then
-	tar -zxvf ${DEPSDIR}/texinfo-4.13.tar.gz -C ${BUILDDIR}/deps-shared/ ;
+	tar -zxvf "${DEPSDIR}/texinfo-4.13.tar.gz" -C "${BUILDDIR}/deps-shared/" ;
 fi
 
 #decompress library dependencies
 
 if [ ! -e "${BUILDDIR}/deps-win" ]; then
-	mkdir -p ${BUILDDIR}/deps-win ;
+	mkdir -p "${BUILDDIR}/deps-win" ;
 fi
 
 if [ ! -e "${BUILDDIR}/deps-win/gc-7.2" ]; then
-	tar -zxvf ${DEPSDIR}/gc-7.2e.tar.gz -C ${BUILDDIR}/deps-win/ ;
+	tar -zxvf "${DEPSDIR}/gc-7.2e.tar.gz" -C "${BUILDDIR}/deps-win/" ;
 fi
 
 if [ ! -e "${BUILDDIR}/deps-win/gettext-0.19.7" ]; then
-	tar -zxvf ${DEPSDIR}/gettext-latest.tar.gz -C ${BUILDDIR}/deps-win/ ;
+	tar -zxvf "${DEPSDIR}/gettext-latest.tar.gz" -C "${BUILDDIR}/deps-win/" ;
 fi
 
 if [ ! -e "${BUILDDIR}/deps-win/gmp-6.1.0" ]; then
-	tar -xvf ${DEPSDIR}/gmp-6.1.0.tar.lz -C ${BUILDDIR}/deps-win/ ;
+	tar -xvf "${DEPSDIR}/gmp-6.1.0.tar.lz" -C "${BUILDDIR}/deps-win/" ;
 fi
 
 if [ ! -e "${BUILDDIR}/deps-win/libffi-3.2.1" ]; then
-	tar -zxvf ${DEPSDIR}/libffi-3.2.1.tar.gz -C ${BUILDDIR}/deps-win/ ;
+	tar -zxvf "${DEPSDIR}/libffi-3.2.1.tar.gz" -C "${BUILDDIR}/deps-win/" ;
 fi
 
 if [ ! -e "${BUILDDIR}/deps-win/libiconv-1.14" ]; then
-	tar -zxvf ${DEPSDIR}/libiconv-1.14.tar.gz -C ${BUILDDIR}/deps-win/ ;
+	tar -zxvf "${DEPSDIR}/libiconv-1.14.tar.gz" -C "${BUILDDIR}/deps-win/" ;
 fi
 
 if [ ! -e "${BUILDDIR}/deps-win/libtool-2.4.6" ]; then
-	tar -zxvf ${DEPSDIR}/libtool-2.4.6.tar.gz -C ${BUILDDIR}/deps-win/ ;
+	tar -zxvf "${DEPSDIR}/libtool-2.4.6.tar.gz" -C "${BUILDDIR}/deps-win/" ;
 fi
 
 if [ ! -e "${BUILDDIR}/deps-win/libunistring-0.9.5" ]; then
-	tar -xvf ${DEPSDIR}/libunistring-0.9.5.tar.xz -C ${BUILDDIR}/deps-win/ ;
+	tar -xvf "${DEPSDIR}/libunistring-0.9.5.tar.xz" -C "${BUILDDIR}/deps-win/" ;
 fi
 
 #create install directory
-mkdir -p ${PREFIX}
+mkdir -p "${PREFIX}"
 
 
 #####################################################
@@ -175,9 +175,9 @@ mkdir -p ${PREFIX}
 #used by both the native build and the Windows build of Guile
 #so it is put in ${BUILDDIR}/deps-shared
 
-cd ${BUILDDIR}/deps-shared/texinfo-4.13
+cd "${BUILDDIR}/deps-shared/texinfo-4.13"
 if [ ! -e "Makefile" ]; then
-	./configure --without-libiconv-prefix --prefix ${BUILDDIR}/deps-shared/bins ;
+	./configure --without-libiconv-prefix --prefix "${BUILDDIR}/deps-shared/bins" ;
 fi
 make && make install
 if [ $? -ne 0 ] ; then
@@ -188,14 +188,14 @@ fi
 #Now we can set ${MAKEINFO} and ${TEXI2DVI} to point
 #to the texinfo binaries in ${BUILDDIR}/deps-shared/bins/bin/
 
-MAKEINFO=${BUILDDIR}/deps-shared/bins/bin/makeinfo
-TEXI2DVI=${BUILDDIR}/deps-shared/bins/bin/texi2dvi
+MAKEINFO="${BUILDDIR}/deps-shared/bins/bin/makeinfo"
+TEXI2DVI="${BUILDDIR}/deps-shared/bins/bin/texi2dvi"
 TEXI2PDF="${TEXI2DVI} --pdf --batch"
 
 #build libiconv (no deps)
-cd ${BUILDDIR}/deps-win/libiconv-1.14
+cd "${BUILDDIR}/deps-win/libiconv-1.14"
 if [ ! -e "Makefile" ]; then
-	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${LIBICONV_CFLAGS}" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix "${PREFIX}" CFLAGS="${LIBICONV_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libiconv. Aborting.\n" ;
 		exit 1 ;
@@ -209,9 +209,9 @@ fi
 
 
 #build libgmp (no deps)
-cd ${BUILDDIR}/deps-win/gmp-6.1.0
+cd "${BUILDDIR}/deps-win/gmp-6.1.0"
 if [ ! -e "Makefile" ]; then
-	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host="${HOST_CC}" --enable-static --disable-rpath --prefix "${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libgmp. Aborting.\n" ;
 		exit 1 ;
@@ -225,9 +225,9 @@ fi
 
 
 #build libffi (no deps)
-cd ${BUILDDIR}/deps-win/libffi-3.2.1
+cd "${BUILDDIR}/deps-win/libffi-3.2.1"
 if [ ! -e "Makefile" ]; then
-	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host="${HOST_CC}" --enable-static --disable-rpath --prefix "${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libffi. Aborting.\n" ;
 		exit 1 ;
@@ -239,13 +239,13 @@ if [ $? -ne 0 ] ; then
 	exit 1 ;
 fi
 #libffi puts its include in a weird place, needs a fix
-cp -R ${PREFIX}/lib/libffi-3.2.1/include/* ${PREFIX}/include/
+cp -R "${PREFIX}/lib/libffi-3.2.1/include/*" "${PREFIX}/include/"
 
 
 #build libtool / libltdl (no deps)
-cd ${BUILDDIR}/deps-win/libtool-2.4.6
+cd "${BUILDDIR}/deps-win/libtool-2.4.6"
 if [ ! -e "Makefile" ]; then
-	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host="${HOST_CC}" --enable-static --disable-rpath --prefix "${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libtool. Aborting.\n" ;
 		exit 1 ;
@@ -259,9 +259,9 @@ fi
 
 
 #build libunistring (depends on libiconv)
-cd ${BUILDDIR}/deps-win/libunistring-0.9.5
+cd "${BUILDDIR}/deps-win/libunistring-0.9.5"
 if [ ! -e "Makefile" ]; then
-	./configure --host=${HOST_CC} --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} CXXFLAGS=${WIN_CXXFLAGS} ;
+	./configure --host="${HOST_CC}" --enable-static --disable-rpath --prefix "${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libunistring. Aborting.\n" ;
 		exit 1 ;
@@ -275,9 +275,9 @@ fi
 
 
 #build gettext / libintl / libasprintf (depends on libiconv, libunistring)
-cd ${BUILDDIR}/deps-win/gettext-0.19.7
+cd "${BUILDDIR}/deps-win/gettext-0.19.7"
 if [ ! -e "Makefile" ]; then
-	./configure --host=${HOST_CC} --disable-threads --enable-static --disable-rpath --prefix ${PREFIX} CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS=${WIN_LDFLAGS} CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
+	./configure --host="${HOST_CC}" --disable-threads --enable-static --disable-rpath --prefix "${PREFIX}" CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring gettext / libintl. Aborting.\n" ;
 		exit 1 ;
@@ -291,9 +291,9 @@ fi
 
 
 #build libatomic_ops
-cd ${BUILDDIR}/deps-win/gc-7.2/libatomic_ops
+cd "${BUILDDIR}/deps-win/gc-7.2/libatomic_ops"
 if [ ! -e "Makefile" ]; then
-	./configure --host=${HOST_CC} --prefix ${PREFIX} CFLAGS=${WIN_CFLAGS} LDFLAGS=${WIN_LDFLAGS} ;
+	./configure --host="${HOST_CC}" --prefix "${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" ;
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring libatomic_ops. Aborting.\n" ;
 		exit 1 ;
@@ -307,22 +307,22 @@ fi
 
 
 #build libgc (depends on libatomic_ops)
-cd ${BUILDDIR}/deps-win/gc-7.2
-make -f Makefile.direct CC=${HOST_CC}-gcc CXX=${HOST_CC}-g++ AS=${HOST_CC}-as RANLIB=${HOST_CC}-ranlib HOSTCC=gcc AO_INSTALL_DIR=${PREFIX} gc.a
+cd "${BUILDDIR}/deps-win/gc-7.2"
+make -f Makefile.direct CC="${HOST_CC}-gcc" CXX="${HOST_CC}-g++" AS="${HOST_CC}-as" RANLIB="${HOST_CC}-ranlib" HOSTCC=gcc AO_INSTALL_DIR="${PREFIX}" gc.a
 if [ $? -ne 0 ] ; then
 	printf "\nError while building libgc. Aborting.\n" ;
 	exit 1 ;
 fi
 #Not sure how to set PREFIX for Makefile.direct, so install manually instead
-cp gc.a ${PREFIX}/lib/libgc.a
-cp -r include ${PREFIX}/include/gc
+cp gc.a "${PREFIX}/lib/libgc.a"
+cp -r include "${PREFIX}/include/gc"
 
 
 #####################################################
 ##                Start of guile build             ##
 #####################################################
 
-cd ${BUILDDIR}
+cd "${BUILDDIR}"
 
 #create ./configure script if needed
 if [ -e "configure" ]; then
@@ -334,32 +334,32 @@ else
 	#Patch libguile/Makefile.in to link statically against all libraries
 	printf "\n\nPatching ./libguile/Makefile.in..\n" ;
 	sleep 2 ;
-	sed -i -e 's/^guile_LDFLAGS = .*$/guile_LDFLAGS = -all-static/g' ${BUILDDIR}/libguile/Makefile.in ;
+	sed -i -e "s/^guile_LDFLAGS = .*$/guile_LDFLAGS = -all-static/g" "${BUILDDIR}/libguile/Makefile.in" ;
 fi
 
 #Fixing a bug in libguile/stime.c (known to exist in 2.0.9 and 2.0.11)
 #A conditional enabling of HAVE_POSIX_CPUTIME meant for FreeBSD incorrectly triggers for MinGW
 #which tricks guile into thinking that MinGW implements clock_getcpuclockid
 #MinGW has limited pthread/pthread time support via winpthreads
-sed -i -e 's/#if defined _POSIX_CPUTIME \&\& defined CLOCK_PROCESS_CPUTIME_ID[ ]*$/#if defined _POSIX_CPUTIME \&\& defined CLOCK_PROCESS_CPUTIME_ID \&\& !defined WIN_PTHREADS_TIME_H/g' libguile/stime.c
+sed -i -e "s/#if defined _POSIX_CPUTIME \&\& defined CLOCK_PROCESS_CPUTIME_ID[ ]*$/#if defined _POSIX_CPUTIME \&\& defined CLOCK_PROCESS_CPUTIME_ID \&\& !defined WIN_PTHREADS_TIME_H/g" libguile/stime.c
 
 #Fixing a bug in lib/msvc-inval.c (fixed in 2.0.11, exists in 2.0.8)
 #Calling convention is incorrectly written as "cdecl" while the compiler expects "__cdecl"
-sed -i -e 's/ cdecl/ __cdecl/g' lib/msvc-inval.c
+sed -i -e "s/ cdecl/ __cdecl/g" lib/msvc-inval.c
 
 #Fixing a bug in lib/stdio.h (Fixed in 2.0.9 (?))
 #Old gnulib incompatible with new compilers
-sed -i -e 's/_GL_WARN_ON_USE (gets, \"gets is a security hole - use fgets instead\");//g' lib/stdio.in.h
+sed -i -e "s/_GL_WARN_ON_USE (gets, \"gets is a security hole - use fgets instead\");//g" lib/stdio.in.h
 
 #Build guile natively. Required for bootstrapping the Windows build
-cd ${BUILDDIR}/build-linux
+cd "${BUILDDIR}/build-linux"
 
 if [ -e "GNUmakefile" ]; then
 	printf "\n./configure already run. Skipping.\n" ;
 	sleep 2 ;
 else
 	../configure --without-libiconv-prefix --with-threads --disable-deprecated --prefix=/usr/local \
-MAKEINFO=${MAKEINFO} TEXI2DVI=${TEXI2DVI} ;
+MAKEINFO="${MAKEINFO}" TEXI2DVI="${TEXI2DVI}" ;
 
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring linux guile. Aborting.\n" ;
@@ -373,18 +373,18 @@ if [ $? -ne 0 ] ; then
 fi
 
 #Build for Windows.
-cd ${BUILDDIR}/build-win
+cd "${BUILDDIR}/build-win"
 
 if [ -e "GNUmakefile" ]; then
 	printf "\n./configure already run. Skipping.\n" ;
 	sleep 2 ;
 else
-	../configure --host=${HOST_CC} --prefix=${PREFIX}/guile --enable-static=yes --enable-shared=no --disable-rpath --enable-debug-malloc --enable-guile-debug \
---disable-deprecated --with-sysroot=${PREFIX} --without-threads PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
+	../configure --host="${HOST_CC}" --prefix="${PREFIX}/guile" --enable-static=yes --enable-shared=no --disable-rpath --enable-debug-malloc --enable-guile-debug \
+--disable-deprecated --with-sysroot="${PREFIX}" --without-threads PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
 LIBFFI_CFLAGS="-I${PREFIX}/include" LIBFFI_LIBS="-L${PREFIX}/lib -lffi" CC_FOR_BUILD=gcc \
-GUILE_FOR_BUILD=$BUILDDIR/build-linux/meta/guile \
+GUILE_FOR_BUILD="$BUILDDIR/build-linux/meta/guile" \
 CFLAGS="${WIN_CFLAGS} -DGC_NO_DLL" LDFLAGS="${WIN_LDFLAGS} -lwinpthread" \
-CXXFLAGS="${WIN_CXXFLAGS}" MAKEINFO=${MAKEINFO} TEXI2DVI=${TEXI2DVI} ;
+CXXFLAGS="${WIN_CXXFLAGS}" MAKEINFO="${MAKEINFO}" TEXI2DVI="${TEXI2DVI}" ;
 
 	if [ $? -ne 0 ] ; then
 		printf "\nError while configuring windows guile. Aborting.\n" ;
@@ -408,22 +408,22 @@ fi
 #We build statically anyway
 printf "\nErasing shared libraries we don't need..\n"
 sleep 2
-rm ${PREFIX}/bin/*.dll
+rm "${PREFIX}/bin/*.dll"
 
 #Copy over unit tests
 printf "\nCopying over the test suite..\n"
 sleep 2
-cp -r ${BUILDDIR}/test-suite/ ${PREFIX}/guile/bin
+cp -r "${BUILDDIR}/test-suite/" "${PREFIX}/guile/bin"
 
 #Copy over additional files
 printf "\nCopying over scripts..\n"
 sleep 2
-cp -r ${GUILE_AUTOMATIC_BASE_DIR}/base/* ${PREFIX}
+cp -r "${GUILE_AUTOMATIC_BASE_DIR}/base/*" "${PREFIX}"
 
 #Finallly, archive the build
 ######zip -r ${PREFIX}.zip ${PREFIX}
-cd ${GUILE_AUTOMATIC_BASE_DIR}/binaries
-tar -zcvf guile-${COMMIT}.tar.gz guile-${COMMIT}
+cd "${GUILE_AUTOMATIC_BASE_DIR}/binaries"
+tar -zcvf "guile-${COMMIT}.tar.gz" "guile-${COMMIT}"
 
 cd ${GUILE_AUTOMATIC_BASE_DIR}
 printf "\nDone creating archive!\n"
