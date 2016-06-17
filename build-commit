@@ -14,16 +14,27 @@ ZIPNAME=guile-${COMMIT}.zip
 BUILDDIR=${GUILE_AUTOMATIC_BASE_DIR}/builds/guile-${COMMIT}
 DEPSDIR=${GUILE_AUTOMATIC_BASE_DIR}/deps
 GIT_REPO_WORKDIR=${GUILE_AUTOMATIC_BASE_DIR}/guile-git
-GIT_REPO_DIR=${GIR_REPO_WORKDIR}/.git
+GIT_REPO_DIR="${GIT_REPO_WORKDIR}/.git"
+
+if [ -e "${GIT_REPO_DIR}" ]; then
+    printf "%s exists\n" ${GIT_REPO_DIR}
+else
+    printf "\n%s does not exist. Downloading git repo..\n\n" ${GIT_REPO_DIR};
+    sleep 2 ;
+    #if guile-git exists but not its .git directory,
+    #delete guile-git, or else git complains about the destination existing
+    if [ -e "${GIT_REPO_WORKDIR}" ]; then
+    	rm -rf "${GIT_REPO_WORKDIR}" ;
+    fi
+    git clone git://git.sv.gnu.org/guile.git "${GIT_REPO_WORKDIR}"
+fi
 
 #Test if we have specified a valid git tag
 #Contribution from Kai-Martin Knaak june 12 2016
 #Use git cat-file -e $sha^{commit} to test if a commit hash exists
-TAGS=`git -C guile-git tag -l`
-git -C guile-git cat-file -e "${COMMIT}"
+TAGS=`git -C ${GIT_REPO_WORKDIR} tag -l`
+git -C ${GIT_REPO_WORKDIR} cat-file -e "${COMMIT}"
 GITCATFILE_RESULT=$?
-
-#printf "Result of git cat-file: ${GITCATFILE_RESULT}\n"
 
 if [ "${TAGS}" != *"${COMMIT}"* ] && [ ${GITCATFILE_RESULT} -ne 0 ] ; then
     printf "Error: ${COMMIT} is not a valid commit tag or git hash.\n" ;
@@ -87,19 +98,6 @@ printf 'Going to building commit %s.\n' ${COMMIT}
 #printf 'Press return to continue\n'
 
 read  -n 1 -p "Press return to continue"
-
-if [ -e "guile-git/.git" ]; then
-    printf 'guile-git/.git exists\n'
-else
-    printf '\nguile-git/.git does not exist. Downloading git repo..\n\n' ;
-    sleep 2 ;
-    #if guile-git exists but not its .git directory,
-    #delete guile-git, or else git complains about the destination existing
-    if [ -e "guile-git" ]; then
-    	rm -rf "guile-git" ;
-    fi
-    git clone git://git.sv.gnu.org/guile.git guile-git
-fi
 
 #clean working directory so we are sure we can pull
 git -C ${GIT_REPO_WORKDIR} reset --hard
