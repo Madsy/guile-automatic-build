@@ -1,6 +1,7 @@
 #!/bin/bash
 
-HOST_CC=i686-w64-mingw32
+##HOST_CC=i686-w64-mingw32
+HOST_CC=${2-"x86_64-w64-mingw32"}
 COMMIT=$1
 GUILE_AUTOMATIC_BASE_DIR=$PWD
 PREFIX=${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${COMMIT}
