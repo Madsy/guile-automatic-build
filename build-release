@@ -1,0 +1,342 @@
+#!/bin/bash
+
+##HOST_CC=i686-w64-mingw32
+HOST_CC=${2-"x86_64-w64-mingw32"}
+GUILE_AUTOMATIC_BASE_DIR="$PWD"
+RELEASE=$1
+if [[ -z "${RELEASE}" ]]; then
+  RELEASE=2.2.4
+fi
+PREFIX="${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${HOST_CC}-${RELEASE}"
+WIN_CFLAGS="-I${PREFIX}/include -g -O2"
+LIBICONV_CFLAGS="${WIN_CFLAGS} --std=gnu99"
+WIN_CXXFLAGS="${WIN_CFLAGS}"
+WIN_LDFLAGS="-L${PREFIX}/lib -L${PREFIX}/lib64"
+BUILDDIR="${GUILE_AUTOMATIC_BASE_DIR}/builds/guile-${RELEASE}"
+DEPSDIR="${GUILE_AUTOMATIC_BASE_DIR}/deps"
+
+#Help the user by ensuring that we have the host MINGW toolchain available on the PATH.
+printf "Testing whether ${HOST_CC}-gcc exists..\n"
+if [ -z `which ${HOST_CC}-gcc` ]; then
+	printf "Could not find %s!\n" "${HOST_CC}-gcc" ;
+#	exit 1 ;
+else
+	printf "Found %s\n" "${HOST_CC}-gcc" ;
+fi
+printf "Testing whether ${HOST_CC}-g++ exists..\n"
+if [ -z `which ${HOST_CC}-g++` ]; then
+	printf "Could not find %s!\n" "${HOST_CC}-g++" ;
+#	exit 1 ;
+else
+	printf "Found %s\n" "${HOST_CC}-g++" ;
+fi
+printf "Testing whether ${HOST_CC}-cpp exists..\n"
+if [ -z `which ${HOST_CC}-cpp` ]; then
+	printf "Could not find %s!\n" "${HOST_CC}-cpp" ;
+#	exit 1 ;
+else
+	printf "Found %s\n" "${HOST_CC}-cpp" ;
+fi
+printf "Testing whether ${HOST_CC}-as exists..\n"
+if [ -z `which ${HOST_CC}-as` ]; then
+	printf "Could not find %s!\n" "${HOST_CC}-as" ;
+#	exit 1 ;
+else
+	printf "Found %s\n" "${HOST_CC}-as" ;
+fi
+printf "Testing whether ${HOST_CC}-ld exists..\n"
+if [ -z `which ${HOST_CC}-ld` ]; then
+	printf "Could not find %s!\n" "${HOST_CC}-ld" ;
+#	exit 1 ;
+else
+	printf "Found %s\n" "${HOST_CC}-ld" ;
+fi
+
+printf "\nOK!\n\n"
+sleep 1
+
+printf "RELEASE: %s\n" "${RELEASE}"
+printf "HOST_CC Host Compiler: %s\n" "${HOST_CC}"
+printf "GUILE_AUTOMATIC_BASE_DIR: %s\n" "${GUILE_AUTOMATIC_BASE_DIR}"
+printf "PREFIX: %s\n" "${PREFIX}"
+printf "WIN_CFLAGS: %s\n" "${WIN_CFLAGS}"
+printf "WIN_CXXFLAGS: %s\n" "${WIN_CXXFLAGS}"
+printf "WIN_LDFLAGS: %s\n" "${WIN_LDFLAGS}"
+printf "BUILDDIR: %s\n" "${BUILDDIR}"
+
+printf "\nGoing to build release %s.\n" "${RELEASE}"
+
+read  -n 1 -p $'\nPress return to continue\n'
+
+# untar release archive
+if [[ ! -d "${BUILDDIR}" ]]; then
+	mkdir -p "${BUILDDIR}"
+fi
+
+	tar xpvf "${DEPSDIR}/guile-${RELEASE}.tar.gz" --strip-components=1 -C "${BUILDDIR}" 2>/dev/null || \
+	echo -e "Error: Release not found. To build this release, please run this command:"; \
+	echo -e "\ncd deps; wget https://ftpmirror.gnu.org/gnu/guile/guile-${RELEASE}.tar.gz; cd ..; ./build-release ${RELEASE}"; \
+	echo -e "\nAlternative: To use Curl, run this command:"; \
+	echo -e "\ncd deps; curl -O https://ftpmirror.gnu.org/gnu/guile/guile-${RELEASE}.tar.gz; cd ..; ./build-release ${RELEASE}"; \
+	exit 1;
+
+if [[ ! -d "${BUILDDIR}/build-linux" ]]; then
+	#create build directory for native build (for build system)
+	mkdir -p "${BUILDDIR}/build-linux" ;
+fi
+
+if [[ ! -d "${BUILDDIR}/build-win" ]]; then
+	#create build directory for windows cross-build
+	mkdir -p "${BUILDDIR}/build-win" ;
+fi
+
+#decompress texinfo dependency (used for old builds like 2.0.0)
+
+if [ ! -e "${BUILDDIR}/deps-shared" ]; then
+	mkdir -p "${BUILDDIR}/deps-shared" ;
+fi
+if [ ! -e "${BUILDDIR}/deps-shared/texinfo-6.5" ]; then
+	tar -xpvf "${DEPSDIR}/texinfo-6.5.tar.xz" -C "${BUILDDIR}/deps-shared/" ;
+fi
+
+#decompress library dependencies
+
+if [ ! -e "${BUILDDIR}/deps-win" ]; then
+	mkdir -p "${BUILDDIR}/deps-win" ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/gc-7.6.10" ]; then
+	tar -xpvf "${DEPSDIR}/gc-7.6.10.tar.gz" -C "${BUILDDIR}/deps-win/" ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/gettext-0.19.8.1" ]; then
+	tar -xpvf "${DEPSDIR}/gettext-0.19.8.1.tar.lz" -C "${BUILDDIR}/deps-win/" ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/gmp-6.1.2" ]; then
+	tar -xpvf "${DEPSDIR}/gmp-6.1.2.tar.lz" -C "${BUILDDIR}/deps-win/" ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/libffi-3.2.1" ]; then
+	tar -xpvf "${DEPSDIR}/libffi-3.2.1.tar.gz" -C "${BUILDDIR}/deps-win/" ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/libiconv-1.15" ]; then
+	tar -xpvf "${DEPSDIR}/libiconv-1.15.tar.gz" -C "${BUILDDIR}/deps-win/" ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/libtool-2.4.6" ]; then
+	tar -xpvf "${DEPSDIR}/libtool-2.4.6.tar.xz" -C "${BUILDDIR}/deps-win/" ;
+fi
+
+if [ ! -e "${BUILDDIR}/deps-win/libunistring-0.9.10" ]; then
+	tar -xpvf "${DEPSDIR}/libunistring-0.9.10.tar.xz" -C "${BUILDDIR}/deps-win/" ;
+fi
+
+#create install directory
+mkdir -p "${PREFIX}"
+
+
+#####################################################
+##           Start of dependency build             ##
+#####################################################
+
+cd "${BUILDDIR}/deps-shared/texinfo-6.5"
+if [ ! -e "Makefile" ]; then
+	./configure --without-libiconv-prefix --prefix="${BUILDDIR}/deps-shared/bins" ;
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while building texinfo. Aborting.\n" ;
+	exit 1 ;
+fi
+
+#Now we can set ${MAKEINFO} and ${TEXI2DVI} to point
+#to the texinfo binaries in ${BUILDDIR}/deps-shared/bins/bin/
+
+MAKEINFO="${BUILDDIR}/deps-shared/bins/bin/makeinfo"
+TEXI2DVI="${BUILDDIR}/deps-shared/bins/bin/texi2dvi"
+TEXI2PDF="${TEXI2DVI} --pdf --batch"
+
+#build libiconv (no deps)
+cd "${BUILDDIR}/deps-win/libiconv-1.15"
+if [ ! -e "Makefile" ]; then
+	./configure --host="${HOST_CC}" --disable-static --enable-shared --disable-rpath --prefix="${PREFIX}" CFLAGS="${LIBICONV_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring libiconv. Aborting.\n" ;
+		exit 1 ;
+	fi
+fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while building libiconv. Aborting.\n" ;
+	exit 1 ;
+fi
+
+
+#build libgmp (no deps)
+cd "${BUILDDIR}/deps-win/gmp-6.1.2"
+	./configure --host="${HOST_CC}" --disable-static --enable-shared --disable-rpath --prefix="${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring libgmp. Aborting.\n" ;
+		exit 1 ;
+	fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while building libgmp. Aborting.\n" ;
+	exit 1 ;
+fi
+
+
+#build libffi (no deps)
+cd "${BUILDDIR}/deps-win/libffi-3.2.1"
+	./configure --host="${HOST_CC}" --disable-static --enable-shared --disable-rpath --prefix="${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring libffi. Aborting.\n" ;
+		exit 1 ;
+	fi
+make && make install
+	printf "Error while building libffi. Aborting.\n" ;
+	exit 1 ;
+#libffi puts its include in a weird place, needs a fix
+cp -a "${PREFIX}/lib/libffi-3.2.1/include/." "${PREFIX}/"
+
+
+#build libtool / libltdl (no deps)
+cd "${BUILDDIR}/deps-win/libtool-2.4.6"
+	./configure --host="${HOST_CC}" --disable-static --enable-shared --disable-rpath --enable-ltdl-install --prefix="${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring libtool. Aborting.\n" ;
+		exit 1 ;
+	fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while building libtool / libltdl. Aborting.\n" ;
+	exit 1 ;
+fi
+
+
+#build libunistring (depends on libiconv)
+cd "${BUILDDIR}/deps-win/libunistring-0.9.5"
+	./configure --host="${HOST_CC}" --disable-static --enable-shared --disable-rpath --enable-relocatable --prefix="${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS}" ;
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring libunistring. Aborting.\n" ;
+		exit 1 ;
+	fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while building libunistring. Aborting.\n" ;
+	exit 1 ;
+fi
+
+
+#build gettext / libintl / libasprintf (depends on libiconv, libunistring)
+cd "${BUILDDIR}/deps-win/gettext-0.19.7"
+	./configure --host="${HOST_CC}" --enable-threads=windows --enable-relocatable --disable-static --enable-shared --disable-rpath --prefix="${PREFIX}" CFLAGS="${WIN_CFLAGS} -O2" LDFLAGS="${WIN_LDFLAGS}" CXXFLAGS="${WIN_CXXFLAGS} -O2" ;
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring gettext / libintl. Aborting.\n" ;
+		exit 1 ;
+	fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while building gettext / libintl. Aborting.\n" ;
+	exit 1 ;
+fi
+
+
+#build libatomic_ops
+cd "${BUILDDIR}/deps-win/libatomic_ops-7.6.8"
+	./configure --host="${HOST_CC}" --prefix="${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" ;
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring libatomic_ops. Aborting.\n" ;
+		exit 1 ;
+	fi
+make && make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while building libatomic_ops. Aborting.\n" ;
+	exit 1 ;
+fi
+
+
+#build libgc (depends on libatomic_ops)
+cd "${BUILDDIR}/deps-win/gc-7.6.10"
+	./configure --enable-cplusplus --host="${HOST_CC}" --prefix="${PREFIX}" CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS}" ;
+if [ $? -ne 0 ] ; then
+	printf "\nError while building libgc. Aborting.\n" ;
+	exit 1 ;
+fi
+
+#####################################################
+##                Start of guile build             ##
+#####################################################
+
+cd "${BUILDDIR}"
+
+#Build guile natively. Required for bootstrapping the Windows build
+cd "${BUILDDIR}/build-linux"
+
+	../configure --without-libiconv-prefix --with-threads --disable-deprecated --prefix=. \
+	MAKEINFO="${MAKEINFO}" TEXI2DVI="${TEXI2DVI}" ;
+
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring linux guile. Aborting.\n" ;
+		exit 1 ;
+	fi
+make
+if [ $? -ne 0 ] ; then
+	printf "\nError while building linux guile. Aborting.\n" ;
+	exit 1 ;
+fi
+
+#Build for Windows.
+cd "${BUILDDIR}/build-win"
+
+	../configure --host="${HOST_CC}" --prefix="${PREFIX}/guile" --disable-static --enable-shared --disable-rpath --disable-debug-malloc --disable-guile-debug \
+	--disable-deprecated --with-sysroot="${PREFIX}" --with-threads PKG_CONFIG=true BDW_GC_CFLAGS="-I${PREFIX}/include" BDW_GC_LIBS="-L${PREFIX}/lib -lgc" \
+	LIBFFI_CFLAGS="-I${PREFIX}/include" LIBFFI_LIBS="-L${PREFIX}/lib -lffi" CC_FOR_BUILD=gcc \
+	GUILE_FOR_BUILD="$BUILDDIR/build-linux/meta/guile" \
+	CFLAGS="${WIN_CFLAGS}" LDFLAGS="${WIN_LDFLAGS} -lwinpthread" \
+	CXXFLAGS="${WIN_CXXFLAGS}" MAKEINFO="${MAKEINFO}" TEXI2DVI="${TEXI2DVI}" ;
+
+	if [ $? -ne 0 ] ; then
+		printf "\nError while configuring windows guile. Aborting.\n" ;
+		exit 1 ;
+	fi
+
+make V=1
+if [ $? -ne 0 ] ; then
+	printf "\nError while building windows guile. Aborting.\n" ;
+	exit 1 ;
+fi
+make install
+if [ $? -ne 0 ] ; then
+	printf "\nError while deploying windows guile. Aborting.\n" ;
+	exit 1 ;
+fi
+
+#Copy over DLLs
+printf "\nCopying DLLs...\n"
+sleep 2
+cp -a "${PREFIX}/guile/bin/lib/." "${PREFIX}/guile/bin/bin/"
+
+#Copy over unit tests
+printf "\nCopying over the test suite..\n"
+sleep 2
+cp -a "${BUILDDIR}/test-suite" "${PREFIX}/guile/bin/"
+
+#Copy over additional files
+printf "\nCopying over scripts..\n"
+sleep 2
+cp -a "${GUILE_AUTOMATIC_BASE_DIR}/base/." "${PREFIX}/"
+
+#Finallly, archive the build
+######zip -r ${PREFIX}.zip ${PREFIX}
+cd "${GUILE_AUTOMATIC_BASE_DIR}/binaries"
+tar -cpvf "guile-${RELEASE}.tar" "guile-${RELEASE}"
+xz -z9e "guile-${RELEASE}.tar"
+
+cd ${GUILE_AUTOMATIC_BASE_DIR}
+printf "\nDone creating archive!\n"
+printf "The redistributable archive is located at ${GUILE_AUTOMATIC_BASE_DIR}/binaries/guile-${RELEASE}.tar.xz\n"
+exit 0
+

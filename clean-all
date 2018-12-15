@@ -3,4 +3,3 @@
 rm -rf ./binaries/*
 rm -rf ./builds/*
 rm -rf ./logs/*
-git -C guile-git reset --hard
